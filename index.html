@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="DeeProject Behavior QA interactive research prototype" />
+  <title>DeeProject — Behavior QA Prototype</title>
+  <style>
+    :root{
+      --bg:#f5f7fb;
+      --surface:rgba(255,255,255,.82);
+      --surface-solid:#ffffff;
+      --surface-soft:#f8f9fd;
+      --line:#e5e8f1;
+      --line-strong:#d7dced;
+      --text:#161923;
+      --muted:#687086;
+      --muted-2:#9298a8;
+      --primary:#6c5ce7;
+      --primary-2:#8b7cff;
+      --cyan:#2fd0d0;
+      --green:#1eb980;
+      --amber:#f0a52b;
+      --red:#ee5d69;
+      --purple-soft:#efedff;
+      --green-soft:#eaf9f3;
+      --amber-soft:#fff7e8;
+      --red-soft:#fff0f1;
+      --shadow:0 18px 50px rgba(52,58,84,.10);
+      --shadow-soft:0 8px 24px rgba(42,49,74,.07);
+      --radius:22px;
+      --radius-md:16px;
+      --radius-sm:12px;
+      --sidebar:224px;
+      --qa-width:430px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at 12% -10%, rgba(108,92,231,.13), transparent 30%),
+        radial-gradient(circle at 90% 10%, rgba(47,208,208,.10), transparent 27%),
+        var(--bg);
+      overflow:hidden;
+    }
+
+    button,input,select,textarea{font:inherit}
+    button{cursor:pointer}
+    button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
+      outline:3px solid rgba(108,92,231,.22);
+      outline-offset:2px;
+    }
+
+    .app-shell{
+      height:100vh;
+      display:grid;
+      grid-template-columns:var(--sidebar) minmax(0,1fr);
+    }
+
+    .sidebar{
+      background:rgba(255,255,255,.78);
+      backdrop-filter:blur(18px);
+      border-right:1px solid var(--line);
+      padding:18px 14px;
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+      z-index:10;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:4px 8px 14px;
+      font-weight:800;
+      font-size:20px;
+      letter-spacing:-.3px;
+    }
+
+    .brand-mark{
+      width:32px;height:32px;border-radius:10px;
+      display:grid;place-items:center;
+      color:white;font-weight:900;
+      background:linear-gradient(135deg,var(--primary),var(--cyan));
+      box-shadow:0 8px 20px rgba(108,92,231,.28);
+    }
+
+    .nav-primary{
+      border:0;color:white;background:linear-gradient(135deg,var(--primary),var(--primary-2));
+      padding:12px 14px;border-radius:14px;font-weight:750;
+      display:flex;align-items:center;justify-content:center;gap:8px;
+      box-shadow:0 12px 24px rgba(108,92,231,.24);
+    }
+
+    .nav-section-title{
+      color:var(--muted-2);font-size:11px;text-transform:uppercase;
+      letter-spacing:.12em;font-weight:800;padding:2px 10px 0;
+    }
+
+    .nav-list{display:flex;flex-direction:column;gap:5px}
+    .nav-item{
+      border:0;background:transparent;color:var(--muted);
+      padding:10px 12px;border-radius:12px;text-align:left;
+      display:flex;align-items:center;gap:10px;font-weight:650;
+    }
+    .nav-item:hover{background:var(--surface-soft);color:var(--text)}
+    .nav-item.active{background:var(--purple-soft);color:var(--primary)}
+
+    .sidebar-spacer{flex:1}
+
+    .mini-card{
+      border:1px solid var(--line);
+      border-radius:16px;padding:13px;background:rgba(255,255,255,.7);
+      box-shadow:var(--shadow-soft)
+    }
+    .mini-card strong{display:block;font-size:13px;margin-bottom:5px}
+    .mini-card p{margin:0;color:var(--muted);font-size:12px;line-height:1.5}
+    .mini-card .mini-action{
+      margin-top:10px;width:100%;padding:9px 10px;border-radius:11px;
+      border:1px solid var(--line-strong);background:white;font-weight:700
+    }
+
+    .profile{
+      display:flex;align-items:center;gap:10px;padding:8px;
+      color:var(--muted);font-size:12px
+    }
+    .avatar{
+      width:34px;height:34px;border-radius:50%;
+      display:grid;place-items:center;background:#ebedf3;color:#333;font-weight:800
+    }
+    .profile strong{display:block;color:var(--text);font-size:12px}
+
+    .workspace{
+      min-width:0;height:100vh;display:flex;flex-direction:column;
+    }
+
+    .topbar{
+      height:70px;border-bottom:1px solid var(--line);
+      background:rgba(255,255,255,.70);backdrop-filter:blur(18px);
+      display:flex;align-items:center;justify-content:space-between;
+      padding:0 20px 0 24px;z-index:9
+    }
+    .topbar-left{display:flex;align-items:center;gap:12px}
+    .conversation-title{font-weight:800}
+    .status-pill{
+      display:none;align-items:center;gap:9px;padding:9px 13px;
+      border:1px solid #c9ebdf;background:var(--green-soft);border-radius:13px;
+      color:#147a59;font-size:12px;font-weight:700
+    }
+    .status-pill.visible{display:flex}
+    .pulse-dot{
+      width:8px;height:8px;border-radius:50%;background:var(--green);
+      box-shadow:0 0 0 6px rgba(30,185,128,.12)
+    }
+
+    .topbar-actions{display:flex;align-items:center;gap:10px}
+    .qa-toggle-wrap{
+      display:flex;align-items:center;gap:9px;font-size:13px;font-weight:750;
+      padding:8px 10px;border-radius:12px
+    }
+    .toggle{
+      width:46px;height:26px;border:0;border-radius:999px;background:#d9dce6;
+      position:relative;transition:.22s ease
+    }
+    .toggle::after{
+      content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;
+      background:white;box-shadow:0 2px 6px rgba(0,0,0,.18);transition:.22s ease
+    }
+    .toggle.on{background:linear-gradient(135deg,var(--green),#4ad59e)}
+    .toggle.on::after{transform:translateX(20px)}
+    .icon-btn{
+      width:38px;height:38px;border:1px solid transparent;background:transparent;
+      border-radius:12px;color:var(--muted);display:grid;place-items:center
+    }
+    .icon-btn:hover{background:var(--surface-soft);border-color:var(--line)}
+
+    .main{
+      min-height:0;flex:1;display:grid;grid-template-columns:minmax(420px,1fr);
+      transition:grid-template-columns .28s ease;
+    }
+    .main.qa-open{grid-template-columns:minmax(420px,1fr) minmax(360px,var(--qa-width))}
+    .chat-pane{
+      min-width:0;display:flex;flex-direction:column;position:relative;
+      background:rgba(255,255,255,.42)
+    }
+
+    .chat-scroll{
+      flex:1;overflow:auto;padding:26px clamp(24px,5vw,76px) 22px;
+      scroll-behavior:smooth
+    }
+
+    .system-banner{
+      display:none;align-items:center;justify-content:space-between;gap:12px;
+      border:1px solid #ded9ff;background:rgba(243,241,255,.88);
+      border-radius:14px;padding:11px 13px;margin-bottom:22px;
+      color:#4f4783;font-size:12px
+    }
+    .system-banner.visible{display:flex}
+    .link-btn{
+      border:0;background:transparent;color:var(--primary);font-weight:750;padding:0
+    }
+
+    .message{
+      display:grid;grid-template-columns:36px minmax(0,1fr);gap:12px;
+      margin:0 auto 24px;max-width:760px
+    }
+    .message-avatar{
+      width:32px;height:32px;border-radius:50%;display:grid;place-items:center;
+      color:white;font-size:11px;font-weight:850;margin-top:1px
+    }
+    .message.user .message-avatar{background:linear-gradient(135deg,#6c5ce7,#9b8cff)}
+    .message.assistant .message-avatar{background:linear-gradient(135deg,#12a879,#37d1a1)}
+    .message-head{display:flex;align-items:center;gap:9px;margin-bottom:7px}
+    .message-head strong{font-size:13px}
+    .message-head span{font-size:11px;color:var(--muted-2)}
+    .message-body{font-size:14px;line-height:1.62;color:#2c3140}
+    .message-body p{margin:0 0 10px}
+    .code-block{
+      background:#fbfcff;border:1px solid var(--line);border-radius:12px;
+      padding:12px 14px;font-family:"SFMono-Regular",Consolas,monospace;font-size:12px;
+      white-space:pre-wrap;overflow:auto
+    }
+    .message-tools{display:flex;gap:6px;margin-top:9px}
+    .message-tools button{
+      border:0;background:transparent;color:var(--muted-2);font-size:13px;padding:4px 6px;border-radius:8px
+    }
+    .message-tools button:hover{background:var(--surface-soft);color:var(--text)}
+
+    .composer-wrap{
+      padding:12px clamp(18px,5vw,68px) 18px;
+      background:linear-gradient(to top,rgba(245,247,251,.98),rgba(245,247,251,.75),transparent)
+    }
+    .composer{
+      max-width:800px;margin:0 auto;background:rgba(255,255,255,.92);
+      border:1px solid var(--line-strong);border-radius:18px;
+      box-shadow:var(--shadow-soft);padding:10px 10px 10px 14px;
+      display:flex;align-items:flex-end;gap:10px
+    }
+    .composer textarea{
+      flex:1;border:0;resize:none;min-height:42px;max-height:120px;
+      padding:10px 2px;background:transparent;color:var(--text)
+    }
+    .send-btn{
+      width:42px;height:42px;border:0;border-radius:13px;color:white;
+      background:linear-gradient(135deg,#121722,#2d3547);font-size:17px;
+      box-shadow:0 8px 18px rgba(18,23,34,.18)
+    }
+    .composer-note{
+      text-align:center;color:var(--muted-2);font-size:10px;margin-top:8px
+    }
+
+    .qa-panel{
+      min-width:0;border-left:1px solid var(--line);background:rgba(250,251,255,.88);
+      backdrop-filter:blur(18px);overflow:hidden;display:none
+    }
+    .main.qa-open .qa-panel{display:flex;flex-direction:column}
+
+    .qa-header{
+      padding:15px 16px 12px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.74)
+    }
+    .qa-title-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .qa-title{font-weight:850;display:flex;align-items:center;gap:9px}
+    .qa-subtitle{margin-top:4px;color:var(--muted);font-size:11px}
+    .qa-tabs{
+      display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:13px;
+      background:#eef0f7;border-radius:12px;padding:4px
+    }
+    .qa-tab{
+      border:0;background:transparent;border-radius:9px;padding:8px 6px;
+      color:var(--muted);font-size:11px;font-weight:800
+    }
+    .qa-tab.active{background:white;color:var(--primary);box-shadow:0 3px 10px rgba(48,55,85,.08)}
+
+    .qa-content{flex:1;overflow:auto;padding:14px}
+    .view{display:none}
+    .view.active{display:block}
+
+    .section-card{
+      background:rgba(255,255,255,.85);border:1px solid var(--line);
+      border-radius:16px;padding:14px;margin-bottom:12px;box-shadow:0 6px 18px rgba(49,56,86,.035)
+    }
+    .section-head{
+      display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px
+    }
+    .section-title{font-size:13px;font-weight:850}
+    .section-caption{font-size:10.5px;color:var(--muted);margin-top:3px;line-height:1.45}
+    .tag{
+      display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 8px;
+      font-size:10px;font-weight:800;border:1px solid var(--line)
+    }
+    .tag.good{background:var(--green-soft);color:#167556;border-color:#cdeedf}
+    .tag.warn{background:var(--amber-soft);color:#9f6510;border-color:#f4ddb4}
+    .tag.bad{background:var(--red-soft);color:#a43d45;border-color:#f2c9cd}
+    .tag.neutral{background:#f5f6fa;color:var(--muted)}
+
+    .dimension-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+    .dimension-card{
+      border:1px solid var(--line);border-radius:14px;padding:11px;background:#fff;
+      transition:.18s ease;position:relative
+    }
+    .dimension-card:hover{transform:translateY(-1px);border-color:#d6d1ff}
+    .dimension-card.selected{border-color:#bfb6ff;background:linear-gradient(180deg,#faf9ff,#fff)}
+    .dimension-top{display:flex;align-items:center;gap:8px}
+    .dimension-icon{
+      width:27px;height:27px;border-radius:50%;display:grid;place-items:center;font-weight:850;font-size:11px
+    }
+    .dimension-icon.r{background:#d9f5e8;color:#15775b}
+    .dimension-icon.h{background:#deebff;color:#2e5ea8}
+    .dimension-icon.c{background:#fff0cc;color:#a46a0a}
+    .dimension-icon.a{background:#ebe1ff;color:#6948b7}
+    .dimension-card strong{font-size:11px}
+    .dimension-card p{font-size:9.5px;line-height:1.4;color:var(--muted);margin:7px 0 0}
+    .dimension-check{
+      position:absolute;right:9px;top:9px;width:18px;height:18px;border-radius:6px;
+      border:1px solid var(--line-strong);display:grid;place-items:center;color:white;font-size:11px
+    }
+    .dimension-card.selected .dimension-check{background:var(--primary);border-color:var(--primary)}
+
+    .subdim-list{display:flex;flex-wrap:wrap;gap:7px}
+    .chip{
+      display:inline-flex;align-items:center;gap:6px;border-radius:999px;
+      padding:7px 9px;background:#f5f6fa;border:1px solid var(--line);font-size:10px;font-weight:700
+    }
+    .chip button{border:0;background:transparent;color:var(--muted-2);padding:0}
+    .inline-form{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:9px}
+    .field,.select{
+      width:100%;border:1px solid var(--line-strong);background:white;border-radius:11px;
+      padding:10px 11px;font-size:11px;color:var(--text)
+    }
+    textarea.field{min-height:72px;resize:vertical}
+    .label{display:block;font-size:10px;color:var(--muted);font-weight:750;margin-bottom:6px}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+    .model-list{display:flex;flex-direction:column;gap:8px}
+    .model-row{
+      display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:9px;
+      border:1px solid var(--line);border-radius:12px;padding:9px;background:#fff
+    }
+    .model-logo{
+      width:24px;height:24px;border-radius:8px;display:grid;place-items:center;
+      background:linear-gradient(135deg,#7c6cff,#39d1ce);color:white;font-weight:850;font-size:10px
+    }
+    .model-name{font-size:11px;font-weight:800}
+    .model-meta{font-size:9px;color:var(--muted)}
+    .remove-model{border:0;background:transparent;color:var(--muted-2)}
+
+    .primary-btn,.secondary-btn,.ghost-btn{
+      border-radius:12px;padding:10px 12px;font-size:11px;font-weight:850
+    }
+    .primary-btn{
+      border:0;color:white;background:linear-gradient(135deg,var(--primary),var(--primary-2));
+      box-shadow:0 10px 20px rgba(108,92,231,.22)
+    }
+    .secondary-btn{border:1px solid var(--line-strong);background:white;color:var(--text)}
+    .ghost-btn{border:0;background:var(--surface-soft);color:var(--muted)}
+    .full{width:100%}
+
+    .score-summary{
+      display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center
+    }
+    .score-ring{
+      width:82px;height:82px;border-radius:50%;
+      display:grid;place-items:center;
+      background:conic-gradient(var(--green) 0 78%,#edf0f5 78% 100%);
+      position:relative
+    }
+    .score-ring::after{
+      content:"";position:absolute;inset:7px;background:white;border-radius:50%
+    }
+    .score-number{position:relative;z-index:1;text-align:center}
+    .score-number strong{font-size:22px;display:block}
+    .score-number span{font-size:10px;color:var(--muted)}
+    .score-copy h3{font-size:13px;margin:0 0 6px}
+    .score-copy p{font-size:10px;color:var(--muted);line-height:1.45;margin:0}
+
+    .metric-row{
+      display:grid;grid-template-columns:auto 1fr auto;gap:9px;align-items:center;
+      padding:9px 0;border-bottom:1px solid #eef0f5
+    }
+    .metric-row:last-child{border-bottom:0}
+    .metric-copy strong{font-size:11px;display:block}
+    .metric-copy span{font-size:9.5px;color:var(--muted)}
+    .metric-score{font-size:12px;font-weight:850}
+    .metric-score.warn{color:#c67d10}
+
+    .turn-card{
+      border:1px solid var(--line);border-radius:14px;padding:11px;margin-bottom:9px;background:#fff
+    }
+    .turn-card.issue{border-color:#f3b8bd;background:linear-gradient(180deg,#fff,#fff8f8)}
+    .turn-head{display:flex;justify-content:space-between;gap:10px;margin-bottom:7px}
+    .turn-title{font-size:11px;font-weight:850}
+    .turn-time{font-size:9px;color:var(--muted-2)}
+    .turn-preview{font-size:10px;color:var(--muted);line-height:1.45;margin-bottom:9px}
+    .score-chips{display:flex;gap:6px;flex-wrap:wrap}
+    .score-chip{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:800}
+    .score-chip .bubble{width:22px;height:22px;border-radius:50%;display:grid;place-items:center}
+    .issue-note{
+      margin-top:9px;background:var(--red-soft);border:1px solid #f3d0d3;
+      border-radius:10px;padding:9px;font-size:9.5px;line-height:1.45;color:#923d44
+    }
+
+    .scope-controls{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .segmented{
+      grid-column:1/-1;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;
+      padding:4px;background:#eef0f7;border-radius:11px
+    }
+    .segmented button{
+      border:0;background:transparent;border-radius:8px;padding:7px 5px;
+      font-size:9px;font-weight:800;color:var(--muted)
+    }
+    .segmented button.active{background:white;color:var(--primary);box-shadow:0 2px 7px rgba(51,58,85,.08)}
+    .range-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end}
+
+    .turn-table{
+      width:100%;border-collapse:collapse;font-size:9.5px
+    }
+    .turn-table th{
+      text-align:left;color:var(--muted-2);font-weight:800;padding:7px 5px;border-bottom:1px solid var(--line)
+    }
+    .turn-table td{padding:8px 5px;border-bottom:1px solid #eef0f5;vertical-align:middle}
+    .turn-preview-cell{max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .checkbox{
+      width:16px;height:16px;border-radius:5px;border:1px solid var(--line-strong);appearance:none;
+      display:grid;place-items:center;background:white
+    }
+    .checkbox:checked{background:var(--primary);border-color:var(--primary)}
+    .checkbox:checked::after{content:"✓";color:white;font-size:10px;font-weight:900}
+    .episode-pill{
+      padding:4px 6px;border-radius:7px;background:var(--purple-soft);color:var(--primary);font-weight:800;font-size:9px
+    }
+    .star-btn{border:0;background:transparent;color:#c7cad4;font-size:15px;padding:0}
+    .star-btn.active{color:#f2a61f}
+
+    .episode-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+    .episode-card{border:1px solid var(--line);border-radius:12px;padding:10px;background:white}
+    .episode-card strong{font-size:10px}
+    .episode-card p{margin:5px 0;color:var(--muted);font-size:9px;line-height:1.4}
+    .episode-footer{display:flex;justify-content:space-between;align-items:center}
+
+    .chart-wrap{height:150px}
+    svg{display:block;width:100%;height:100%}
+    .chart-grid-line{stroke:#eceef4;stroke-width:1}
+    .chart-axis{fill:#9298a8;font-size:9px}
+    .line-r{fill:none;stroke:#1eb980;stroke-width:2.2}
+    .line-h{fill:none;stroke:#3f7de8;stroke-width:2.2}
+    .line-c{fill:none;stroke:#f0a52b;stroke-width:2.2}
+    .line-a{fill:none;stroke:#7e66d9;stroke-width:2.2}
+    .legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:5px}
+    .legend span{font-size:9px;color:var(--muted);display:flex;align-items:center;gap:5px}
+    .legend i{width:8px;height:8px;border-radius:50%;display:block}
+
+    .insight-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .insight-card{border:1px solid var(--line);border-radius:13px;padding:10px;background:#fff}
+    .insight-card strong{display:block;font-size:10px}
+    .insight-value{font-size:11px;font-weight:850;margin:5px 0}
+    .insight-card p{font-size:9px;color:var(--muted);line-height:1.4;margin:0}
+    .micro-line{height:42px;margin-top:6px}
+
+    .issue-list{display:flex;flex-direction:column;gap:8px}
+    .issue-item{
+      display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:start;
+      padding:9px;border:1px solid var(--line);border-radius:11px;background:#fff
+    }
+    .issue-dot{width:8px;height:8px;border-radius:50%;margin-top:3px}
+    .issue-item strong{font-size:9.5px;display:block}
+    .issue-item p{font-size:8.8px;color:var(--muted);margin:4px 0 0;line-height:1.4}
+
+    .modal-backdrop{
+      position:fixed;inset:0;background:rgba(18,21,32,.35);backdrop-filter:blur(8px);
+      display:none;align-items:center;justify-content:center;padding:28px;z-index:50
+    }
+    .modal-backdrop.open{display:flex}
+    .modal{
+      width:min(920px,94vw);max-height:92vh;overflow:hidden;background:rgba(255,255,255,.96);
+      border:1px solid rgba(255,255,255,.7);border-radius:24px;box-shadow:0 35px 90px rgba(27,32,52,.24);
+      display:grid;grid-template-rows:auto minmax(0,1fr) auto
+    }
+    .modal-head{
+      padding:18px 20px;border-bottom:1px solid var(--line);
+      display:flex;justify-content:space-between;gap:14px;align-items:flex-start
+    }
+    .modal-title h2{margin:0;font-size:19px}
+    .modal-title p{margin:5px 0 0;color:var(--muted);font-size:11px}
+    .modal-body{overflow:auto;padding:18px 20px;display:grid;grid-template-columns:1.25fr .75fr;gap:16px}
+    .modal-footer{
+      border-top:1px solid var(--line);padding:14px 20px;
+      display:flex;justify-content:space-between;gap:12px;align-items:center
+    }
+    .progress-steps{display:flex;gap:6px}
+    .step-dot{width:8px;height:8px;border-radius:50%;background:#d9dce6}
+    .step-dot.active{background:var(--primary)}
+
+    .toast{
+      position:fixed;right:22px;bottom:22px;z-index:70;
+      background:#151a26;color:white;border-radius:14px;padding:12px 14px;
+      font-size:11px;box-shadow:0 18px 40px rgba(0,0,0,.22);
+      transform:translateY(20px);opacity:0;pointer-events:none;transition:.25s ease
+    }
+    .toast.show{transform:translateY(0);opacity:1}
+
+    .mobile-menu{display:none}
+
+    @media(max-width:1100px){
+      :root{--sidebar:190px;--qa-width:390px}
+      .dimension-grid{grid-template-columns:1fr}
+      .modal-body{grid-template-columns:1fr}
+      .main.qa-open{grid-template-columns:minmax(360px,1fr) minmax(340px,var(--qa-width))}
+    }
+    @media(max-width:860px){
+      body{overflow:auto}
+      .app-shell{grid-template-columns:1fr;height:auto;min-height:100vh}
+      .sidebar{display:none}
+      .workspace{min-height:100vh}
+      .mobile-menu{display:grid}
+      .main,.main.qa-open{grid-template-columns:1fr}
+      .qa-panel{position:fixed;inset:70px 0 0 0;z-index:20}
+      .chat-pane{min-height:calc(100vh - 70px)}
+      .modal{width:96vw}
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-mark">D</div>DeeProject</div>
+      <button class="nav-primary" id="newChatBtn">＋ New Chat</button>
+
+      <div class="nav-section-title">Workspace</div>
+      <nav class="nav-list">
+        <button class="nav-item active">◉ Conversations</button>
+        <button class="nav-item">▦ Evaluations</button>
+        <button class="nav-item">◇ Projects</button>
+        <button class="nav-item">▤ Datasets</button>
+      </nav>
+
+      <div class="nav-section-title">Configuration</div>
+      <nav class="nav-list">
+        <button class="nav-item" id="openConfigNav">◫ Dimensions</button>
+        <button class="nav-item">▧ Rubrics</button>
+        <button class="nav-item">◈ Scenarios</button>
+      </nav>
+
+      <div class="sidebar-spacer"></div>
+
+      <div class="mini-card">
+        <strong>Research prototype</strong>
+        <p>Explore configurable behavioral evaluation across turns, episodes, and long-horizon sessions.</p>
+        <button class="mini-action" id="resetDemoBtn">Reset demo</button>
+      </div>
+
+      <div class="profile">
+        <div class="avatar">AC</div>
+        <div><strong>Alex Chen</strong>alex@acme.com</div>
+      </div>
+    </aside>
+
+    <section class="workspace">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="icon-btn mobile-menu">☰</button>
+          <div class="conversation-title">Python Debugging Session⌄</div>
+          <div class="status-pill" id="statusPill"><span class="pulse-dot"></span>Evaluation Session Active</div>
+        </div>
+        <div class="topbar-actions">
+          <div class="qa-toggle-wrap">
+            <span>◈ Behavior QA</span>
+            <button class="toggle" id="qaToggle" aria-pressed="false" aria-label="Toggle Behavior QA"></button>
+          </div>
+          <button class="icon-btn">?</button>
+          <button class="icon-btn">•••</button>
+          <div class="avatar">AC</div>
+        </div>
+      </header>
+
+      <main class="main" id="mainLayout">
+        <section class="chat-pane">
+          <div class="chat-scroll" id="chatScroll">
+            <div class="system-banner" id="systemBanner">
+              <span>◉ This conversation is being evaluated using your current Behavior QA configuration.</span>
+              <button class="link-btn" id="viewConfigBtn">View configuration</button>
+            </div>
+
+            <div id="messageList"></div>
+          </div>
+
+          <div class="composer-wrap">
+            <div class="composer">
+              <textarea id="messageInput" placeholder="Message DeeProject..." rows="1"></textarea>
+              <button class="send-btn" id="sendBtn">↑</button>
+            </div>
+            <div class="composer-note">Prototype responses are pre-scripted for consistent research testing.</div>
+          </div>
+        </section>
+
+        <aside class="qa-panel" id="qaPanel">
+          <div class="qa-header">
+            <div class="qa-title-row">
+              <div>
+                <div class="qa-title">◈ Behavior Quality Control</div>
+                <div class="qa-subtitle" id="qaSubtitle">Configure what to evaluate and how.</div>
+              </div>
+              <button class="icon-btn" id="closeQaBtn">×</button>
+            </div>
+            <div class="qa-tabs">
+              <button class="qa-tab active" data-view="live">Live QA</button>
+              <button class="qa-tab" data-view="organize">Select & Group</button>
+              <button class="qa-tab" data-view="analysis">Session Analysis</button>
+            </div>
+          </div>
+
+          <div class="qa-content">
+            <div class="view active" id="view-live">
+              <div class="section-card" id="preSessionCard">
+                <div class="section-head">
+                  <div>
+                    <div class="section-title">Start a Behavior QA session</div>
+                    <div class="section-caption">Choose evaluation dimensions, domain, and model before continuing the conversation.</div>
+                  </div>
+                  <span class="tag neutral">Not active</span>
+                </div>
+                <button class="primary-btn full" id="openConfigBtn">Configure evaluation</button>
+              </div>
+
+              <div id="activeLiveContent" style="display:none">
+                <div class="section-card">
+                  <div class="section-head">
+                    <div>
+                      <div class="section-title">Current response</div>
+                      <div class="section-caption">Evidence-grounded scoring for the latest assistant turn.</div>
+                    </div>
+                    <span class="tag good">Good</span>
+                  </div>
+                  <div class="score-summary">
+                    <div class="score-ring">
+                      <div class="score-number"><strong id="overallScore">2.6</strong><span>/ 3</span></div>
+                    </div>
+                    <div class="score-copy">
+                      <h3>Ready to use with minor improvements</h3>
+                      <p>The response addresses the task, but may omit one prior constraint.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="section-card">
+                  <div class="section-title" style="margin-bottom:7px">Core dimensions</div>
+                  <div id="liveMetrics"></div>
+                </div>
+
+                <div class="section-card">
+                  <div class="section-head">
+                    <div>
+                      <div class="section-title">Evaluation timeline</div>
+                      <div class="section-caption">Each assistant response is appended to this session.</div>
+                    </div>
+                    <button class="ghost-btn" id="jumpAnalysisBtn">View all</button>
+                  </div>
+                  <div id="liveTimeline"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="view" id="view-organize">
+              <div class="section-card">
+                <div class="section-head">
+                  <div>
+                    <div class="section-title">Evaluation scope & unit</div>
+                    <div class="section-caption">Choose what is scored and at what granularity.</div>
+                  </div>
+                </div>
+                <div class="segmented" id="unitSegment">
+                  <button data-unit="response">Response</button>
+                  <button data-unit="turn" class="active">Turns</button>
+                  <button data-unit="episode">Episode</button>
+                  <button data-unit="conversation">Conversation</button>
+                </div>
+                <div class="scope-controls" style="margin-top:10px">
+                  <div>
+                    <label class="label">Scope</label>
+                    <select class="select" id="scopeSelect">
+                      <option value="last">Last N turns</option>
+                      <option value="all">Entire conversation</option>
+                      <option value="custom">Custom range</option>
+                      <option value="selected">Selected turns / episodes</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="label">Turn window</label>
+                    <select class="select" id="windowSelect">
+                      <option>10</option>
+                      <option selected>20</option>
+                      <option>30</option>
+                      <option>50</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="section-card">
+                <div class="section-head">
+                  <div>
+                    <div class="section-title">Turn selection</div>
+                    <div class="section-caption">Exclude low-value turns, mark important ones, or group related turns into task episodes.</div>
+                  </div>
+                </div>
+                <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px">
+                  <button class="secondary-btn" id="selectAllBtn">Select all</button>
+                  <button class="secondary-btn" id="clearAllBtn">Clear all</button>
+                  <button class="ghost-btn" id="autoGroupBtn">✦ Auto group</button>
+                </div>
+                <table class="turn-table">
+                  <thead>
+                    <tr><th></th><th>Turn</th><th>Preview</th><th>Episode</th><th>★</th></tr>
+                  </thead>
+                  <tbody id="turnTableBody"></tbody>
+                </table>
+                <button class="primary-btn full" id="groupSelectedBtn" style="margin-top:10px">Group selected turns as episode</button>
+              </div>
+
+              <div class="section-card">
+                <div class="section-head">
+                  <div>
+                    <div class="section-title">Episodes</div>
+                    <div class="section-caption">Evaluation groups can be merged, split, renamed, or re-scored.</div>
+                  </div>
+                </div>
+                <div class="episode-grid" id="episodeGrid"></div>
+              </div>
+            </div>
+
+            <div class="view" id="view-analysis">
+              <div class="section-card">
+                <div class="section-head">
+                  <div>
+                    <div class="section-title">Long-horizon session quality</div>
+                    <div class="section-caption">Aggregated across the selected conversation window.</div>
+                  </div>
+                  <span class="tag warn">Moderate drift</span>
+                </div>
+                <div class="score-summary">
+                  <div class="score-ring" style="background:conic-gradient(var(--primary) 0 83%,#edf0f5 83% 100%)">
+                    <div class="score-number"><strong>2.5</strong><span>/ 3</span></div>
+                  </div>
+                  <div class="score-copy">
+                    <h3>Healthy overall, with one consistency break</h3>
+                    <p>Goal progress improved after the user clarified their request.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="section-card">
+                <div class="section-head">
+                  <div>
+                    <div class="section-title">Behavior trend</div>
+                    <div class="section-caption">Reasoning, helpfulness, consistency, and context alignment over time.</div>
+                  </div>
+                </div>
+                <div class="chart-wrap">
+                  <svg viewBox="0 0 360 150" role="img" aria-label="Behavior trend chart">
+                    <line class="chart-grid-line" x1="32" y1="20" x2="348" y2="20"/>
+                    <line class="chart-grid-line" x1="32" y1="70" x2="348" y2="70"/>
+                    <line class="chart-grid-line" x1="32" y1="120" x2="348" y2="120"/>
+                    <text class="chart-axis" x="10" y="24">3</text>
+                    <text class="chart-axis" x="10" y="74">2</text>
+                    <text class="chart-axis" x="10" y="124">1</text>
+                    <polyline class="line-r" points="32,35 85,42 138,45 191,38 244,55 297,41 348,33"/>
+                    <polyline class="line-h" points="32,51 85,55 138,68 191,62 244,85 297,65 348,59"/>
+                    <polyline class="line-c" points="32,61 85,69 138,60 191,74 244,105 297,89 348,74"/>
+                    <polyline class="line-a" points="32,74 85,67 138,80 191,72 244,91 297,79 348,70"/>
+                    <text class="chart-axis" x="28" y="144">T1</text>
+                    <text class="chart-axis" x="176" y="144">T4</text>
+                    <text class="chart-axis" x="333" y="144">T7</text>
+                  </svg>
+                </div>
+                <div class="legend">
+                  <span><i style="background:#1eb980"></i>Reasoning</span>
+                  <span><i style="background:#3f7de8"></i>Helpfulness</span>
+                  <span><i style="background:#f0a52b"></i>Consistency</span>
+                  <span><i style="background:#7e66d9"></i>Context</span>
+                </div>
+              </div>
+
+              <div class="insight-grid">
+                <div class="insight-card">
+                  <strong>Context drift</strong>
+                  <div class="insight-value" style="color:#c67d10">Moderate</div>
+                  <p>One drift event detected after the user changed goals.</p>
+                  <svg class="micro-line" viewBox="0 0 120 42">
+                    <polyline points="0,33 18,31 36,25 54,27 72,15 90,20 120,12" fill="none" stroke="#f0a52b" stroke-width="2"/>
+                  </svg>
+                </div>
+                <div class="insight-card">
+                  <strong>Memory retention</strong>
+                  <div class="insight-value" style="color:#167556">High · 84%</div>
+                  <p>The model retained key code and user constraints.</p>
+                  <svg class="micro-line" viewBox="0 0 120 42">
+                    <polyline points="0,31 18,21 36,23 54,17 72,18 90,20 120,16" fill="none" stroke="#1eb980" stroke-width="2"/>
+                  </svg>
+                </div>
+                <div class="insight-card">
+                  <strong>Consistency over time</strong>
+                  <div class="insight-value" style="color:#167556">Good</div>
+                  <p>A minor contradiction appeared at Turn 5.</p>
+                </div>
+                <div class="insight-card">
+                  <strong>Goal progress</strong>
+                  <div class="insight-value" style="color:#167556">82%</div>
+                  <p>The assistant is moving toward the active goal.</p>
+                </div>
+                <div class="insight-card">
+                  <strong>Recovery</strong>
+                  <div class="insight-value" style="color:#167556">Good</div>
+                  <p>The assistant recovered after user feedback.</p>
+                </div>
+                <div class="insight-card">
+                  <strong>User signal</strong>
+                  <div class="insight-value" style="color:#167556">Improving</div>
+                  <p>Derived from explicit confirmations in later turns.</p>
+                </div>
+              </div>
+
+              <div class="section-card" style="margin-top:12px">
+                <div class="section-head">
+                  <div>
+                    <div class="section-title">Top issues detected</div>
+                    <div class="section-caption">Cross-turn evidence is linked to each finding.</div>
+                  </div>
+                </div>
+                <div class="issue-list">
+                  <div class="issue-item">
+                    <span class="issue-dot" style="background:var(--red)"></span>
+                    <div><strong>Consistency break at Turn 5</strong><p>The assistant contradicted its earlier explanation about where the print statement should appear.</p></div>
+                    <span class="tag bad">High</span>
+                  </div>
+                  <div class="issue-item">
+                    <span class="issue-dot" style="background:var(--amber)"></span>
+                    <div><strong>Context misalignment at Turn 3</strong><p>The response solved the new request but did not confirm one prior constraint.</p></div>
+                    <span class="tag warn">Medium</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </main>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" id="configModal" role="dialog" aria-modal="true" aria-labelledby="configTitle">
+    <div class="modal">
+      <div class="modal-head">
+        <div class="modal-title">
+          <h2 id="configTitle">Configure Behavior QA</h2>
+          <p>Create a reusable evaluation policy for this conversation.</p>
+        </div>
+        <button class="icon-btn" id="closeConfigBtn">×</button>
+      </div>
+
+      <div class="modal-body">
+        <div>
+          <div class="section-card">
+            <div class="section-head">
+              <div>
+                <div class="section-title">1. Select core evaluable dimensions</div>
+                <div class="section-caption">Research-backed dimensions stay stable; users can adapt the sub-dimensions.</div>
+              </div>
+              <span class="tag neutral">Required</span>
+            </div>
+            <div class="dimension-grid" id="dimensionGrid"></div>
+          </div>
+
+          <div class="section-card">
+            <div class="section-head">
+              <div>
+                <div class="section-title">2. Customize sub-dimensions</div>
+                <div class="section-caption">Start with scaffolds or add domain-specific criteria in your own language.</div>
+              </div>
+              <button class="ghost-btn" id="addSuggestedBtn">✦ Suggest scaffolds</button>
+            </div>
+            <div class="subdim-list" id="subdimList"></div>
+            <div class="inline-form">
+              <input class="field" id="subdimInput" placeholder="Add your own sub-dimension..." />
+              <button class="secondary-btn" id="addSubdimBtn">Add</button>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <div class="section-head">
+              <div>
+                <div class="section-title">3. Define evaluation context</div>
+                <div class="section-caption">Context steers rubric hints and long-horizon interpretation.</div>
+              </div>
+            </div>
+            <div class="form-grid">
+              <div>
+                <label class="label">Domain / use case</label>
+                <input class="field" id="domainInput" value="Coding assistant for beginner Python learners" />
+              </div>
+              <div>
+                <label class="label">Evaluation goal</label>
+                <input class="field" id="goalInput" value="Provide clear, actionable, context-aware debugging support" />
+              </div>
+            </div>
+            <div style="margin-top:10px">
+              <label class="label">Rubric hints</label>
+              <textarea class="field" id="rubricInput">Score 3 when the response preserves prior constraints, explains the cause, and gives a verifiable next step. Score 2 when support is useful but incomplete. Score 1 when it is misleading, contradictory, or ignores the user's goal.</textarea>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="section-card">
+            <div class="section-head">
+              <div>
+                <div class="section-title">Evaluation model(s)</div>
+                <div class="section-caption">The prototype simulates model comparison for consistent testing.</div>
+              </div>
+            </div>
+            <div class="model-list" id="modelList">
+              <div class="model-row">
+                <div class="model-logo">G</div>
+                <div><div class="model-name">GPT-4o</div><div class="model-meta">Primary evaluator</div></div>
+                <button class="remove-model">×</button>
+              </div>
+              <div class="model-row">
+                <div class="model-logo">C</div>
+                <div><div class="model-name">Claude Sonnet</div><div class="model-meta">Agreement check</div></div>
+                <button class="remove-model">×</button>
+              </div>
+            </div>
+            <button class="secondary-btn full" id="addModelBtn" style="margin-top:9px">＋ Add model</button>
+          </div>
+
+          <div class="section-card">
+            <div class="section-head">
+              <div>
+                <div class="section-title">Evaluation frequency</div>
+                <div class="section-caption">Use lightweight scoring per turn and deeper session analysis on demand.</div>
+              </div>
+            </div>
+            <label class="label">Auto evaluate</label>
+            <select class="select" id="frequencySelect">
+              <option>Every assistant turn</option>
+              <option>Every 5 turns</option>
+              <option>Manual / on demand</option>
+              <option>At session end</option>
+            </select>
+            <label class="label" style="margin-top:10px">Default evaluation unit</label>
+            <select class="select" id="defaultUnitSelect">
+              <option>Individual turns</option>
+              <option>Task episodes</option>
+              <option>Entire conversation</option>
+            </select>
+          </div>
+
+          <div class="section-card">
+            <div class="section-head">
+              <div>
+                <div class="section-title">Prototype transparency</div>
+                <div class="section-caption">Recommended for CHI user testing.</div>
+              </div>
+            </div>
+            <p style="font-size:10px;color:var(--muted);line-height:1.55;margin:0">
+              This prototype uses scripted model responses and simulated evaluation outputs. The interaction is functional, but the behavioral scores are not generated by a production evaluator.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <div class="progress-steps" aria-hidden="true">
+          <span class="step-dot active"></span><span class="step-dot active"></span><span class="step-dot active"></span>
+        </div>
+        <div style="display:flex;gap:9px">
+          <button class="secondary-btn" id="saveTemplateBtn">Save as template</button>
+          <button class="primary-btn" id="startSessionBtn">Start evaluation session</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const state = {
+      qaOpen:false,
+      sessionActive:false,
+      selectedDimensions:["Reasoning Transparency","Helpfulness","Consistency","Context Alignment"],
+      subdimensions:["Clarity of Explanation","Completeness of Reasoning","Assumptions Stated","Actionability"],
+      selectedTurns:new Set([1,2,3,4,5,6]),
+      starredTurns:new Set([3,5]),
+      episodes:[
+        {id:"E1",name:"Understand Problem",turns:[1,2],status:"Good"},
+        {id:"E2",name:"Debug Loop",turns:[3,4,5],status:"Needs improvement"},
+        {id:"E3",name:"Sum Values",turns:[6],status:"Good"}
+      ]
+    };
+
+    const dimensions = [
+      {name:"Reasoning Transparency", key:"R", cls:"r", desc:"Clarity and completeness of the model's reasoning process."},
+      {name:"Helpfulness", key:"H", cls:"h", desc:"How well the response supports the user's needs and next actions."},
+      {name:"Consistency", key:"C", cls:"c", desc:"Logical consistency across turns, claims, and recommendations."},
+      {name:"Context Alignment", key:"A", cls:"a", desc:"Fit to the user's goals, constraints, and prior conversation."}
+    ];
+
+    const conversation = [
+      {
+        id:1, role:"user", time:"10:02 AM",
+        body:"Why is my Python loop not working?"
+      },
+      {
+        id:2, role:"assistant", time:"10:02 AM",
+        body:"It looks like your loop is missing an indentation after the <code>for</code> statement. In Python, indentation defines the block of code that runs inside the loop.",
+        code:"for i in range(5):\n    print(i)",
+        scores:{R:3,H:2,C:3,A:3}, status:"good"
+      },
+      {
+        id:3, role:"user", time:"10:05 AM",
+        body:"I fixed the indentation, but now it only prints the last value."
+      },
+      {
+        id:4, role:"assistant", time:"10:05 AM",
+        body:"That usually happens when the print statement is outside the loop. Move it inside the loop so each value is printed during iteration.",
+        code:"for i in range(5):\n    print(i)",
+        scores:{R:2,H:2,C:3,A:2}, status:"good"
+      },
+      {
+        id:5, role:"user", time:"10:08 AM",
+        body:"Got it. Now I also want the sum of all numbers."
+      },
+      {
+        id:6, role:"assistant", time:"10:08 AM",
+        body:"Initialize a total before the loop, add each value during the loop, and print the total after the loop. You can still print each number inside the loop.",
+        code:"total = 0\nfor i in range(5):\n    total += i\n    print(i)\nprint(total)",
+        scores:{R:3,H:3,C:2,A:3}, status:"issue",
+        issue:"The response should explicitly confirm that it preserves the user's earlier requirement to display each value."
+      }
+    ];
+
+    const scriptedReplies = [
+      {
+        body:"To verify the result, add a quick check after the loop. For <code>range(5)</code>, the expected total is 10.",
+        code:"assert total == 10\nprint('Verified:', total)",
+        scores:{R:3,H:3,C:3,A:3},
+        status:"good"
+      },
+      {
+        body:"You can wrap the logic in a function so the same behavior works for any range. Keep the printing optional if you want a cleaner reusable design.",
+        code:"def summarize(n, show_values=True):\n    total = 0\n    for i in range(n):\n        total += i\n        if show_values:\n            print(i)\n    return total",
+        scores:{R:3,H:3,C:3,A:2},
+        status:"good"
+      },
+      {
+        body:"The current code is correct for small inputs. For a large range, you can use the arithmetic-series formula when you only need the total.",
+        code:"total = n * (n - 1) // 2",
+        scores:{R:2,H:3,C:2,A:2},
+        status:"issue",
+        issue:"This answer introduces an optimization but does not check whether the user still wants every number displayed."
+      }
+    ];
+
+    function renderMessages(){
+      const list = document.getElementById("messageList");
+      list.innerHTML = conversation.map(m => `
+        <article class="message ${m.role}">
+          <div class="message-avatar">${m.role === "user" ? "You" : "AI"}</div>
+          <div>
+            <div class="message-head"><strong>${m.role === "user" ? "You" : "Assistant"}</strong><span>${m.time}</span></div>
+            <div class="message-body">
+              <p>${m.body}</p>
+              ${m.code ? `<div class="code-block">${escapeHtml(m.code)}</div>` : ""}
+            </div>
+            ${m.role === "assistant" ? `<div class="message-tools"><button>⧉</button><button>♡</button><button>♧</button></div>` : ""}
+          </div>
+        </article>
+      `).join("");
+      renderTimeline();
+      renderTurnTable();
+      renderEpisodes();
+      updateLiveMetrics();
+    }
+
+    function escapeHtml(value){
+      return value.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+    }
+
+    function renderDimensionGrid(){
+      const grid = document.getElementById("dimensionGrid");
+      grid.innerHTML = dimensions.map(d => {
+        const selected = state.selectedDimensions.includes(d.name);
+        return `
+          <button class="dimension-card ${selected ? "selected" : ""}" data-dimension="${d.name}">
+            <span class="dimension-check">${selected ? "✓" : ""}</span>
+            <div class="dimension-top">
+              <span class="dimension-icon ${d.cls}">${d.key}</span>
+              <strong>${d.name}</strong>
+            </div>
+            <p>${d.desc}</p>
+          </button>
+        `;
+      }).join("");
+
+      grid.querySelectorAll(".dimension-card").forEach(card => {
+        card.addEventListener("click",()=>{
+          const name = card.dataset.dimension;
+          if(state.selectedDimensions.includes(name)){
+            state.selectedDimensions = state.selectedDimensions.filter(x => x !== name);
+          }else{
+            state.selectedDimensions.push(name);
+          }
+          renderDimensionGrid();
+        });
+      });
+    }
+
+    function renderSubdims(){
+      const el = document.getElementById("subdimList");
+      el.innerHTML = state.subdimensions.map((s,i)=>`
+        <span class="chip">${s}<button data-remove="${i}">×</button></span>
+      `).join("");
+      el.querySelectorAll("[data-remove]").forEach(btn=>{
+        btn.addEventListener("click",()=>{
+          state.subdimensions.splice(Number(btn.dataset.remove),1);
+          renderSubdims();
+        });
+      });
+    }
+
+    function renderTimeline(){
+      const assistants = conversation.filter(m=>m.role==="assistant").slice(-4);
+      const el = document.getElementById("liveTimeline");
+      if(!el) return;
+      el.innerHTML = assistants.map((m,i)=>`
+        <div class="turn-card ${m.status === "issue" ? "issue" : ""}">
+          <div class="turn-head"><span class="turn-title">Assistant turn ${i+1}</span><span class="turn-time">${m.time}</span></div>
+          <div class="turn-preview">${stripHtml(m.body).slice(0,120)}${stripHtml(m.body).length>120?"…":""}</div>
+          <div class="score-chips">
+            ${scoreChips(m.scores)}
+          </div>
+          ${m.issue ? `<div class="issue-note">⚠ ${m.issue}</div>` : ""}
+        </div>
+      `).join("");
+    }
+
+    function stripHtml(html){ const d=document.createElement("div"); d.innerHTML=html; return d.textContent || d.innerText || ""; }
+
+    function scoreChips(scores){
+      const meta = {R:["r","Reasoning"],H:["h","Helpfulness"],C:["c","Consistency"],A:["a","Context"]};
+      return Object.entries(scores).map(([k,v])=>`
+        <span class="score-chip"><span class="bubble dimension-icon ${meta[k][0]}">${k}</span>${v}</span>
+      `).join("");
+    }
+
+    function updateLiveMetrics(){
+      const latest = [...conversation].reverse().find(m=>m.role==="assistant");
+      if(!latest) return;
+      const mapping = [
+        ["R","Reasoning Transparency","Explains the cause and reasoning path."],
+        ["H","Helpfulness","Provides concrete, actionable next steps."],
+        ["C","Consistency","Preserves claims across the session."],
+        ["A","Context Alignment","Uses the user's goals and prior constraints."]
+      ];
+      document.getElementById("overallScore").textContent =
+        (Object.values(latest.scores).reduce((a,b)=>a+b,0)/4).toFixed(1);
+      document.getElementById("liveMetrics").innerHTML = mapping.map(([k,name,desc])=>`
+        <div class="metric-row">
+          <span class="dimension-icon ${k.toLowerCase()}">${k}</span>
+          <div class="metric-copy"><strong>${name}</strong><span>${desc}</span></div>
+          <span class="metric-score ${latest.scores[k]===2?"warn":""}">${latest.scores[k]} / 3</span>
+        </div>
+      `).join("");
+    }
+
+    function renderTurnTable(){
+      const tbody = document.getElementById("turnTableBody");
+      if(!tbody) return;
+      tbody.innerHTML = conversation.map((m,idx)=>{
+        const episode = state.episodes.find(ep=>ep.turns.includes(m.id));
+        return `
+          <tr>
+            <td><input class="checkbox turn-select" type="checkbox" data-id="${m.id}" ${state.selectedTurns.has(m.id)?"checked":""}></td>
+            <td>${m.id}</td>
+            <td class="turn-preview-cell">${m.role==="user"?"User":"Assistant"}: ${stripHtml(m.body)}</td>
+            <td>${episode ? `<span class="episode-pill">${episode.id}</span>` : "—"}</td>
+            <td><button class="star-btn ${state.starredTurns.has(m.id)?"active":""}" data-star="${m.id}">★</button></td>
+          </tr>
+        `;
+      }).join("");
+
+      tbody.querySelectorAll(".turn-select").forEach(cb=>{
+        cb.addEventListener("change",()=>{
+          const id=Number(cb.dataset.id);
+          cb.checked ? state.selectedTurns.add(id) : state.selectedTurns.delete(id);
+        });
+      });
+      tbody.querySelectorAll("[data-star]").forEach(btn=>{
+        btn.addEventListener("click",()=>{
+          const id=Number(btn.dataset.star);
+          state.starredTurns.has(id) ? state.starredTurns.delete(id) : state.starredTurns.add(id);
+          renderTurnTable();
+        });
+      });
+    }
+
+    function renderEpisodes(){
+      const grid = document.getElementById("episodeGrid");
+      if(!grid) return;
+      grid.innerHTML = state.episodes.map(ep=>`
+        <div class="episode-card">
+          <strong>${ep.id} · ${ep.name}</strong>
+          <p>Turns ${ep.turns.join(", ")} · ${ep.turns.length} turn${ep.turns.length>1?"s":""}</p>
+          <div class="episode-footer">
+            <span class="tag ${ep.status.includes("Needs")?"warn":"good"}">${ep.status}</span>
+            <button class="link-btn" data-edit-episode="${ep.id}">Edit</button>
+          </div>
+        </div>
+      `).join("");
+      grid.querySelectorAll("[data-edit-episode]").forEach(btn=>{
+        btn.addEventListener("click",()=>{
+          const ep=state.episodes.find(e=>e.id===btn.dataset.editEpisode);
+          const next=prompt("Rename episode", ep.name);
+          if(next && next.trim()){ ep.name=next.trim(); renderEpisodes(); showToast("Episode renamed"); }
+        });
+      });
+    }
+
+    function setQaOpen(open){
+      state.qaOpen=open;
+      document.getElementById("mainLayout").classList.toggle("qa-open",open);
+      document.getElementById("qaToggle").classList.toggle("on",open);
+      document.getElementById("qaToggle").setAttribute("aria-pressed",String(open));
+    }
+
+    function setSessionActive(active){
+      state.sessionActive=active;
+      document.getElementById("statusPill").classList.toggle("visible",active);
+      document.getElementById("systemBanner").classList.toggle("visible",active);
+      document.getElementById("preSessionCard").style.display=active?"none":"block";
+      document.getElementById("activeLiveContent").style.display=active?"block":"none";
+      document.getElementById("qaSubtitle").textContent=active
+        ? "Capturing turn-level evidence and long-horizon signals."
+        : "Configure what to evaluate and how.";
+      localStorage.setItem("deeproject_session_active",String(active));
+    }
+
+    function switchView(view){
+      document.querySelectorAll(".qa-tab").forEach(t=>t.classList.toggle("active",t.dataset.view===view));
+      document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+      document.getElementById(`view-${view}`).classList.add("active");
+    }
+
+    function openConfig(){
+      document.getElementById("configModal").classList.add("open");
+    }
+    function closeConfig(){
+      document.getElementById("configModal").classList.remove("open");
+    }
+
+    function sendMessage(){
+      const input=document.getElementById("messageInput");
+      const text=input.value.trim();
+      if(!text) return;
+      const now=new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
+      conversation.push({id:conversation.length+1,role:"user",time:now,body:escapeHtml(text)});
+      input.value="";
+      renderMessages();
+      scrollBottom();
+
+      setTimeout(()=>{
+        const reply=scriptedReplies.shift() || scriptedReplies[scriptedReplies.length-1] || {
+          body:"I would first restate the active goal, preserve earlier constraints, and then propose a verifiable next step.",
+          scores:{R:3,H:3,C:3,A:3},status:"good"
+        };
+        conversation.push({id:conversation.length+1,role:"assistant",time:new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}),...reply});
+        state.selectedTurns.add(conversation.length);
+        renderMessages();
+        scrollBottom();
+        if(state.sessionActive){
+          showToast(reply.status==="issue" ? "Behavior QA detected a cross-turn issue" : "Latest response evaluated");
+        }
+      },700);
+    }
+
+    function scrollBottom(){
+      const el=document.getElementById("chatScroll");
+      setTimeout(()=>{el.scrollTop=el.scrollHeight;},20);
+    }
+
+    function showToast(text){
+      const toast=document.getElementById("toast");
+      toast.textContent=text;
+      toast.classList.add("show");
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer=setTimeout(()=>toast.classList.remove("show"),2200);
+    }
+
+    document.getElementById("qaToggle").addEventListener("click",()=>{
+      setQaOpen(!state.qaOpen);
+      if(state.qaOpen && !state.sessionActive) switchView("live");
+    });
+    document.getElementById("closeQaBtn").addEventListener("click",()=>setQaOpen(false));
+    document.querySelectorAll(".qa-tab").forEach(tab=>tab.addEventListener("click",()=>switchView(tab.dataset.view)));
+    document.getElementById("openConfigBtn").addEventListener("click",openConfig);
+    document.getElementById("viewConfigBtn").addEventListener("click",openConfig);
+    document.getElementById("openConfigNav").addEventListener("click",()=>{setQaOpen(true);openConfig();});
+    document.getElementById("closeConfigBtn").addEventListener("click",closeConfig);
+    document.getElementById("configModal").addEventListener("click",(e)=>{if(e.target.id==="configModal") closeConfig();});
+    document.getElementById("startSessionBtn").addEventListener("click",()=>{
+      closeConfig();setQaOpen(true);setSessionActive(true);switchView("live");showToast("Behavior QA session started");
+    });
+    document.getElementById("saveTemplateBtn").addEventListener("click",()=>showToast("Configuration saved locally"));
+    document.getElementById("sendBtn").addEventListener("click",sendMessage);
+    document.getElementById("messageInput").addEventListener("keydown",(e)=>{
+      if(e.key==="Enter" && !e.shiftKey){e.preventDefault();sendMessage();}
+    });
+    document.getElementById("jumpAnalysisBtn").addEventListener("click",()=>switchView("analysis"));
+
+    document.getElementById("addSubdimBtn").addEventListener("click",()=>{
+      const input=document.getElementById("subdimInput");
+      if(input.value.trim()){state.subdimensions.push(input.value.trim());input.value="";renderSubdims();showToast("Sub-dimension added");}
+    });
+    document.getElementById("addSuggestedBtn").addEventListener("click",()=>{
+      ["Diagnostic Accuracy","Verification Step","Learning Appropriateness"].forEach(s=>{
+        if(!state.subdimensions.includes(s)) state.subdimensions.push(s);
+      });
+      renderSubdims();showToast("Domain scaffolds added");
+    });
+    document.getElementById("addModelBtn").addEventListener("click",()=>{
+      const list=document.getElementById("modelList");
+      const row=document.createElement("div");
+      row.className="model-row";
+      row.innerHTML='<div class="model-logo">G</div><div><div class="model-name">Gemini 1.5 Pro</div><div class="model-meta">Additional evaluator</div></div><button class="remove-model">×</button>';
+      list.appendChild(row);showToast("Model added");
+    });
+    document.getElementById("modelList").addEventListener("click",(e)=>{
+      if(e.target.classList.contains("remove-model")) e.target.closest(".model-row").remove();
+    });
+
+    document.getElementById("selectAllBtn").addEventListener("click",()=>{
+      conversation.forEach(m=>state.selectedTurns.add(m.id));renderTurnTable();
+    });
+    document.getElementById("clearAllBtn").addEventListener("click",()=>{
+      state.selectedTurns.clear();renderTurnTable();
+    });
+    document.getElementById("autoGroupBtn").addEventListener("click",()=>{
+      state.episodes=[
+        {id:"E1",name:"Understand Problem",turns:[1,2],status:"Good"},
+        {id:"E2",name:"Fix Loop Behavior",turns:[3,4],status:"Good"},
+        {id:"E3",name:"Compute and Verify Total",turns:conversation.filter(m=>m.id>=5).map(m=>m.id),status:"Needs improvement"}
+      ];
+      renderTurnTable();renderEpisodes();showToast("Conversation grouped into task episodes");
+    });
+    document.getElementById("groupSelectedBtn").addEventListener("click",()=>{
+      const turns=[...state.selectedTurns].sort((a,b)=>a-b);
+      if(!turns.length){showToast("Select at least one turn");return;}
+      const id=`E${state.episodes.length+1}`;
+      state.episodes.push({id,name:"Custom Episode",turns,status:"Good"});
+      renderTurnTable();renderEpisodes();showToast("Selected turns grouped");
+    });
+
+    document.querySelectorAll("#unitSegment button").forEach(btn=>btn.addEventListener("click",()=>{
+      document.querySelectorAll("#unitSegment button").forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
+    }));
+
+    document.getElementById("resetDemoBtn").addEventListener("click",()=>{
+      localStorage.removeItem("deeproject_session_active");
+      location.reload();
+    });
+    document.getElementById("newChatBtn").addEventListener("click",()=>showToast("New chat created for prototype demo"));
+
+    renderDimensionGrid();
+    renderSubdims();
+    renderMessages();
+    setSessionActive(localStorage.getItem("deeproject_session_active")==="true");
+  </script>
+</body>
+</html>
